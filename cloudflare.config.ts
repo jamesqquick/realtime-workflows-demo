@@ -1,14 +1,35 @@
-import { defineConfig } from "cf/config";
+import { bindings, defineConfig, defineWorker, exports } from "cf/config";
 import * as entrypoint from "./src/index.ts" with { type: "cf-worker" };
+
+const workerName = "workflow-lab-solution";
+const workflowName = `${workerName}-blog`;
+const app = defineWorker({
+  name: workerName,
+  compatibilityDate: "2026-11-03",
+  entrypoint,
+  exports: {
+    BlogWorkflow: exports.workflow({ name: workflowName }),
+    ProgressRoom: exports.durableObject({ storage: "sqlite" }),
+  },
+});
 
 export default defineConfig({
   worker: {
-    name: "workflow-lab-starter",
-    compatibilityDate: "2026-11-03",
-    entrypoint,
+    ...app,
     assets: {
       notFoundHandling: "single-page-application",
       runWorkerFirst: ["/api/*"],
+    },
+    env: {
+      BLOG_WORKFLOW: bindings.workflow({
+        name: workflowName,
+        worker: app,
+        exportName: "BlogWorkflow",
+      }),
+      PROGRESS_ROOM: bindings.durableObject({
+        worker: app,
+        exportName: "ProgressRoom",
+      }),
     },
     observability: {
       enabled: true,

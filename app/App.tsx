@@ -1,13 +1,94 @@
-import { useState } from "react";
-import { stages } from "../src/progress";
+import { useEffect, useState } from "react";
+import { type ProgressUpdate, stages } from "../src/progress";
+import { useJobProgress } from "./use-job-progress";
+
+class JobStartError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "JobStartError";
+  }
+}
 
 export function App() {
   const [prompt, setPrompt] = useState(
     "How to send real-time updates from a background job",
   );
-  const [message, setMessage] = useState(
-    "Ready to connect. Implement the job endpoint to start tracking.",
+  const [failAtDraft, setFailAtDraft] = useState(false);
+  const [jobId, setJobId] = useState(() =>
+    new URLSearchParams(location.search).get("jobId"),
   );
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { progress, connection, reconnect } = useJobProgress(jobId);
+  const busy =
+    starting || (!!jobId && (!progress || progress.status === "running"));
+  const percent = Math.round(
+    ((progress?.completedStages ?? 0) / stages.length) * 100,
+  );
+  const message = starting
+    ? "Starting your workflow…"
+    : (progress?.message ??
+      (jobId ? "Connecting to your job…" : "Ready when you are."));
+
+  useEffect(() => {
+    const onPopState = () => {
+      setJobId(new URLSearchParams(location.search).get("jobId"));
+      setError(null);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  async function startJob(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy) return;
+    setStarting(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/jobs", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ prompt, failAtDraft }),
+      });
+      const data: unknown = await response.json();
+      if (!response.ok) {
+        throw new JobStartError(
+          typeof data === "object" &&
+            data !== null &&
+            "error" in data &&
+            typeof data.error === "string"
+            ? data.error
+            : "Could not start the job.",
+        );
+      }
+      if (
+        typeof data !== "object" ||
+        data === null ||
+        !("jobId" in data) ||
+        typeof data.jobId !== "string"
+      )
+        throw new JobStartError("The server did not return a job ID.");
+      const url = new URL(location.href);
+      url.searchParams.set("jobId", data.jobId);
+      history.pushState(null, "", url);
+      setJobId(data.jobId);
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Could not start the job.",
+      );
+    } finally {
+      setStarting(false);
+    }
+  }
+
+  function startFresh(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    const url = new URL(location.href);
+    url.searchParams.delete("jobId");
+    history.pushState(null, "", url);
+    setJobId(null);
+    setError(null);
+  }
 
   return (
     <div className="shell">
@@ -15,7 +96,7 @@ export function App() {
         <a className="wordmark" href="/">
           Workflow Lab
         </a>
-        <span className="badge">Starter</span>
+        <span className="badge">Reference solution</span>
       </header>
       <main>
         <p className="eyebrow">Cloudflare Workflows + Durable Objects</p>
@@ -24,38 +105,60 @@ export function App() {
           <br />a little foreground.
         </h1>
         <p className="intro">
-          Follow a job from its first step to its last. You’ll build the
-          connection that brings its progress to this page.
+          A real Workflow runs each stage. A Durable Object sends its progress
+          to this page over a WebSocket.
         </p>
         <div className="workspace">
           <section className="input-panel" aria-labelledby="job-heading">
             <p className="eyebrow">01 / Start a job</p>
             <h2 id="job-heading">What are you working on?</h2>
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                setMessage(
-                  "The interface is ready. Connect this form to a job endpoint to start tracking progress.",
-                );
-              }}
-            >
+            <form onSubmit={startJob}>
               <label htmlFor="prompt">Blog post topic</label>
               <textarea
                 id="prompt"
-                value={prompt}
+                value={progress?.prompt ?? prompt}
                 onChange={(event) => setPrompt(event.target.value)}
+                disabled={!!jobId || starting}
                 rows={5}
                 maxLength={280}
                 required
               />
               <p className="hint">
-                Research, outline, draft, review. Choose your own stages and
-                messages.
+                The stages simulate blog generation. The Workflow, storage, and
+                WebSocket connection are real.
               </p>
-              <button type="submit">
-                Start workflow <span aria-hidden="true">↗</span>
-              </button>
+              <label className="failure-option">
+                <input
+                  type="checkbox"
+                  checked={failAtDraft}
+                  disabled={!!jobId || starting}
+                  onChange={(event) => setFailAtDraft(event.target.checked)}
+                />
+                Simulate a failure at the draft step
+              </label>
+              {jobId ? (
+                <button type="button" onClick={startFresh}>
+                  Start a new job <span aria-hidden="true">↗</span>
+                </button>
+              ) : (
+                <button type="submit" disabled={starting || !prompt.trim()}>
+                  {starting ? "Starting…" : "Start workflow"}
+                  <span aria-hidden="true">↗</span>
+                </button>
+              )}
+              {error && (
+                <p className="error" role="alert">
+                  {error}
+                </p>
+              )}
             </form>
+            {jobId && (
+              <p className="job-link">
+                Job <a href={`?jobId=${encodeURIComponent(jobId)}`}>{jobId}</a>
+                <br />
+                Open this link in another tab to follow the same job.
+              </p>
+            )}
           </section>
           <section
             className="progress-panel"
@@ -66,30 +169,46 @@ export function App() {
                 <p className="eyebrow">02 / Follow along</p>
                 <h2 id="progress-heading">Workflow progress</h2>
               </div>
-              <span className="badge">Not connected</span>
+              <span className="badge">{connection}</span>
             </div>
             <p className="status" role="status">
               {message}
             </p>
+            {connection === "Disconnected" && (
+              <div>
+                <p className="error" role="alert">
+                  Progress updates disconnected. The workflow may still be
+                  running. Reconnect, or check the job link.
+                </p>
+                <button type="button" onClick={reconnect}>
+                  Reconnect
+                </button>
+              </div>
+            )}
             <div className="progress-row">
               <progress
-                value={0}
+                value={progress?.completedStages ?? 0}
                 max={stages.length}
                 aria-label="Completed stages"
               />
-              <span>0%</span>
+              <span>{percent}%</span>
             </div>
             <ol className="stages">
-              {stages.map((stage, index) => (
-                <li key={stage.id} data-state="waiting">
-                  <span className="stage-number">{index + 1}</span>
-                  <div>
-                    <strong>{stage.name}</strong>
-                    <p>{stage.message}</p>
-                  </div>
-                  <span className="stage-state">Waiting</span>
-                </li>
-              ))}
+              {stages.map((stage, index) => {
+                const state = stageState(progress, index);
+                return (
+                  <li key={stage.id} data-state={state}>
+                    <span className="stage-number">
+                      {state === "complete" ? "✓" : index + 1}
+                    </span>
+                    <div>
+                      <strong>{stage.name}</strong>
+                      <p>{stage.message}</p>
+                    </div>
+                    <span className="stage-state">{state}</span>
+                  </li>
+                );
+              })}
             </ol>
           </section>
         </div>
@@ -99,8 +218,19 @@ export function App() {
         </p>
       </main>
       <footer>
-        Starter interface. Job creation and progress tracking are not connected.
+        Simulated blog generation. Real background execution and progress
+        delivery.
+        <br />
+        Demo job links are public to anyone who has the URL.
       </footer>
     </div>
   );
+}
+
+function stageState(progress: ProgressUpdate | null, index: number) {
+  if (!progress) return "waiting";
+  if (index < progress.completedStages) return "complete";
+  if (index === progress.stageIndex)
+    return progress.status === "failed" ? "failed" : "running";
+  return "waiting";
 }
