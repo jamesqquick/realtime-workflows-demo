@@ -13,9 +13,9 @@ export default {
       );
     }
 
-    const jobPath = pathname.match(/^\/api\/jobs\/([^/]+)$/);
-    if (jobPath && request.method === "GET") {
-      const jobId = jobPath[1];
+    const jobStatusPath = pathname.match(/^\/api\/jobs\/([^/]+)$/);
+    if (jobStatusPath && request.method === "GET") {
+      const jobId = jobStatusPath[1];
       return Response.json(
         {
           error: "The job status endpoint is not implemented.",
