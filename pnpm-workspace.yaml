@@ -1,0 +1,16 @@
+# Approve build scripts needed by the generated Worker's dependencies.
+allowBuilds:
+  esbuild: true
+  workerd: true
+minimumReleaseAgeExclude:
+  - "@cloudflare/build-output-utils@0.9.9"
+  - "@cloudflare/config@0.30.1"
+  - "@cloudflare/runtime-types@0.1.22"
+  - "@cloudflare/vite-plugin@2.0.0-beta.v.11"
+  - "@cloudflare/workerd-darwin-64@1.20261103.1"
+  - "@cloudflare/workerd-darwin-arm64@1.20261103.1"
+  - "@cloudflare/workerd-linux-64@1.20261103.1"
+  - "@cloudflare/workerd-linux-arm64@1.20261103.1"
+  - "@cloudflare/workerd-windows-64@1.20261103.1"
+  - miniflare@5.20261103.0-beta
+  - workerd@1.20261103.1
