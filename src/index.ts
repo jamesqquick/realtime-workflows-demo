@@ -12,6 +12,17 @@ export default {
         { status: 501 },
       );
     }
+
+    const jobPath = pathname.match(/^\/api\/jobs\/([^/]+)$/);
+    if (jobPath && request.method === "GET") {
+      const jobId = jobPath[1];
+      return Response.json(
+        {
+          error: "The job status endpoint is not implemented.",
+        },
+        { status: 501 },
+      );
+    }
     return Response.json({ error: "Not found" }, { status: 404 });
   },
 } satisfies ExportedHandler<Env>;
