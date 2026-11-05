@@ -81,12 +81,24 @@ test("browser displays terminal failures and fits a mobile viewport", {
   t.after(() => context.close());
   const page = await context.newPage();
   page.setDefaultTimeout(6000);
+  await page.routeWebSocket(/\/api\/progress\?/, (socket) => {
+    socket.send(
+      JSON.stringify({
+        jobId: new URL(socket.url()).searchParams.get("jobId"),
+        prompt: "Failed job topic",
+        stageIndex: 2,
+        completedStages: 2,
+        status: "failed",
+        message: "The workflow failed. Start another job to try again.",
+      }),
+    );
+  });
   await page.goto(app.origin);
-  await page.getByLabel("Simulate a failure at the draft step").check();
+  await page.getByLabel("Job prompt").fill("Failed job topic");
   await page.getByRole("button", { name: "Start workflow" }).click();
   await page
     .getByRole("status")
-    .filter({ hasText: "failed on purpose" })
+    .filter({ hasText: "The workflow failed" })
     .waitFor({ timeout: 20000 });
   assert.deepEqual(await page.locator(".stage-state").allTextContents(), [
     "complete",

@@ -147,24 +147,3 @@ test("real workflow broadcasts all stages, isolates jobs, and replays saved prog
   const status = await waitForWorkflow(jobA, "complete");
   assert.equal(status.progress.status, "complete");
 });
-
-test("intentional failure is delivered and remains available to late subscribers", {
-  timeout: 35000,
-}, async (t) => {
-  const jobId = await start({ prompt: "Failure case", failAtDraft: true });
-  const live = watch(jobId);
-  t.after(() => live.close());
-  const failed = await live.waitFor((message) => message.status === "failed");
-  assert.equal(failed.stageIndex, 2);
-  assert.equal(failed.completedStages, 2);
-  assert.match(failed.message, /failed on purpose/);
-  assert.equal(
-    live.messages.some((message) => message.status === "complete"),
-    false,
-  );
-  const late = watch(jobId);
-  t.after(() => late.close());
-  assert.equal((await late.waitFor(() => true, 3000)).status, "failed");
-  const status = await waitForWorkflow(jobId, "errored");
-  assert.equal(status.progress.status, "failed");
-});

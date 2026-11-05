@@ -6,7 +6,6 @@ export function App() {
   const [prompt, setPrompt] = useState(
     "How to send real-time updates from a background job",
   );
-  const [failAtDraft, setFailAtDraft] = useState(false);
   const [jobId, setJobId] = useState(() =>
     new URLSearchParams(location.search).get("jobId"),
   );
@@ -41,7 +40,7 @@ export function App() {
       const response = await fetch("/api/jobs", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt, failAtDraft }),
+        body: JSON.stringify({ prompt }),
       });
       if (!response.ok) {
         setError("Could not start the job.");
@@ -105,15 +104,6 @@ export function App() {
                 The stages simulate background work. The Workflow, storage, and
                 WebSocket connection are real.
               </p>
-              <label className="failure-option">
-                <input
-                  type="checkbox"
-                  checked={failAtDraft}
-                  disabled={!!jobId || starting}
-                  onChange={(event) => setFailAtDraft(event.target.checked)}
-                />
-                Simulate a failure at the draft step
-              </label>
               {jobId ? (
                 <button type="button" onClick={startFresh}>
                   Start a new job <span aria-hidden="true">↗</span>

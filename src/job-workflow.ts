@@ -3,14 +3,7 @@ import {
   type WorkflowEvent,
   type WorkflowStep,
 } from "cloudflare:workers";
-import { NonRetryableError } from "cloudflare:workflows";
 import { type JobParams, stages } from "./progress";
-
-class DemoStageError extends NonRetryableError {
-  constructor() {
-    super("The draft step failed on purpose. Start another job to try again.");
-  }
-}
 
 export class JobWorkflow extends WorkflowEntrypoint<Env, JobParams> {
   async run(event: WorkflowEvent<JobParams>, step: WorkflowStep) {
@@ -32,8 +25,6 @@ export class JobWorkflow extends WorkflowEntrypoint<Env, JobParams> {
         });
         await step.sleep(`simulate ${stage.id}`, "2 seconds");
         await step.do(`run ${stage.id}`, async () => {
-          if (stage.id === "draft" && event.payload.failAtDraft)
-            throw new DemoStageError();
           return { stage: stage.id, prompt: event.payload.prompt };
         });
       }

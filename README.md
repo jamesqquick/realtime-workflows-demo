@@ -7,7 +7,7 @@ A React app for tracking background jobs with Cloudflare Workflows, Durable Obje
 | Branch | Contents |
 | --- | --- |
 | `main` | Runnable starter: React interface and Worker health endpoint. Job creation returns `501`; progress stays at zero. |
-| `solution` | Finished app: Workflow execution, per-job progress storage and WebSocket broadcasts, snapshot replay, browser reconnection, and a simulated failure. |
+| `solution` | Finished app: Workflow execution, per-job progress storage and WebSocket broadcasts, snapshot replay, and browser reconnection. |
 
 The finished app simulates a background job through four stages: research, outline, draft, and review. The stages simulate work without calling external services. Workflow execution, storage, and progress delivery are real.
 
@@ -30,7 +30,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Both branches run from the repository root. On `solution`, start a job, refresh the page, or open its job link in another tab to follow the same job. Select the failure checkbox to stop intentionally at the draft stage.
+Both branches run from the repository root. On `solution`, start a job, refresh the page, or open its job link in another tab to follow the same job.
 
 ## Checks
 
@@ -43,7 +43,7 @@ pnpm exec playwright install chromium
 pnpm test:browser
 ```
 
-Tests run against a local Worker runtime. Browser tests cover the starter on `main`, and completion, refresh, a second tab, failure, and mobile layout on `solution`.
+Tests run against a local Worker runtime. Browser tests cover the starter on `main`, and completion, refresh, a second tab, failed progress display, job creation errors, and mobile layout on `solution`. The failed progress display test uses a mocked WebSocket message.
 
 ## Deployment
 
