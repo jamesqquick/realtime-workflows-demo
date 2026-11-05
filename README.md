@@ -9,7 +9,7 @@ A React app for tracking background jobs with Cloudflare Workflows, Durable Obje
 | `main` | Runnable starter: React interface and Worker health endpoint. Job creation returns `501`; progress stays at zero. |
 | `solution` | Finished app: Workflow execution, per-job progress storage and WebSocket broadcasts, snapshot replay, browser reconnection, and a simulated failure. |
 
-The finished app simulates blog generation through four stages: research, outline, draft, and review. Workflow execution, storage, and progress delivery are real. It does not generate a blog post or require an AI API key.
+The finished app simulates a background job through four stages: research, outline, draft, and review. The stages simulate work without calling external services. Workflow execution, storage, and progress delivery are real.
 
 ## Run locally
 
