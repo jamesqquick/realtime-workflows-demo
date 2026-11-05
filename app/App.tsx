@@ -2,13 +2,6 @@ import { useEffect, useState } from "react";
 import { type ProgressUpdate, stages } from "../src/progress";
 import { useJobProgress } from "./use-job-progress";
 
-class JobStartError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "JobStartError";
-  }
-}
-
 export function App() {
   const [prompt, setPrompt] = useState(
     "How to send real-time updates from a background job",
@@ -50,32 +43,17 @@ export function App() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ prompt, failAtDraft }),
       });
-      const data: unknown = await response.json();
       if (!response.ok) {
-        throw new JobStartError(
-          typeof data === "object" &&
-            data !== null &&
-            "error" in data &&
-            typeof data.error === "string"
-            ? data.error
-            : "Could not start the job.",
-        );
+        setError("Could not start the job.");
+        return;
       }
-      if (
-        typeof data !== "object" ||
-        data === null ||
-        !("jobId" in data) ||
-        typeof data.jobId !== "string"
-      )
-        throw new JobStartError("The server did not return a job ID.");
+      const { jobId } = (await response.json()) as { jobId: string };
       const url = new URL(location.href);
-      url.searchParams.set("jobId", data.jobId);
+      url.searchParams.set("jobId", jobId);
       history.pushState(null, "", url);
-      setJobId(data.jobId);
-    } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "Could not start the job.",
-      );
+      setJobId(jobId);
+    } catch {
+      setError("Could not start the job.");
     } finally {
       setStarting(false);
     }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { isProgressUpdate, type ProgressUpdate } from "../src/progress";
+import type { ProgressUpdate } from "../src/progress";
 
 type Connection =
   | "Ready"
@@ -30,13 +30,8 @@ export function useJobProgress(jobId: string | null) {
     };
     socket.onmessage = (event) => {
       if (!active) return;
-      let update: unknown;
-      try {
-        update = JSON.parse(event.data);
-      } catch {
-        return;
-      }
-      if (!isProgressUpdate(update) || update.jobId !== jobId) return;
+      const update = JSON.parse(event.data) as ProgressUpdate;
+      if (update.jobId !== jobId) return;
       setProgress(update);
       if (update.status !== "running") {
         terminal = true;

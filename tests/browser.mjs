@@ -109,3 +109,32 @@ test("browser displays terminal failures and fits a mobile viewport", {
     true,
   );
 });
+
+test("browser can retry after job creation fails", {
+  timeout: 15000,
+}, async (t) => {
+  const context = await browser.newContext();
+  t.after(() => context.close());
+  const page = await context.newPage();
+  page.setDefaultTimeout(6000);
+  await page.goto(app.origin);
+  await page.route("**/api/jobs", (route) =>
+    route.fulfill({ status: 503, body: "Service unavailable" }),
+  );
+  await page.getByRole("button", { name: "Start workflow" }).click();
+  await page.getByRole("alert").waitFor();
+  assert.equal(
+    await page.getByRole("alert").textContent(),
+    "Could not start the job.",
+  );
+  assert.equal(new URL(page.url()).searchParams.has("jobId"), false);
+  assert.equal(
+    await page.getByRole("button", { name: "Start workflow" }).isEnabled(),
+    true,
+  );
+
+  await page.unroute("**/api/jobs");
+  await page.getByRole("button", { name: "Start workflow" }).click();
+  await page.waitForURL(/\?jobId=/);
+  assert.equal(await page.getByRole("alert").count(), 0);
+});
