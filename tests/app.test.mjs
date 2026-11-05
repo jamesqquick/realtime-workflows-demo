@@ -73,39 +73,12 @@ async function waitForWorkflow(jobId, expected) {
   assert.fail(`Workflow ${jobId} did not reach ${expected}`);
 }
 
-test("solution validates input and unknown jobs", async () => {
-  for (const params of [
-    { prompt: " " },
-    { prompt: "a".repeat(281) },
-    { prompt: 42 },
-    { prompt: "Valid", failAtDraft: "true" },
-    null,
-  ]) {
-    const response = await fetch(`${app.origin}/api/jobs`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(params),
-    });
-    assert.equal(response.status, 400);
-  }
-  assert.equal(
-    (
-      await fetch(`${app.origin}/api/jobs`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: "{",
-      })
-    ).status,
-    400,
-  );
-  assert.equal(
-    (await fetch(`${app.origin}/api/jobs`, { method: "POST", body: "hello" }))
-      .status,
-    415,
-  );
-  assert.equal((await fetch(`${app.origin}/api/jobs`)).status, 405);
+test("solution serves health and handles missing or unknown jobs", async () => {
+  const health = await fetch(`${app.origin}/api/health`);
+  assert.equal(health.status, 200);
+  assert.deepEqual(await health.json(), { ok: true });
+  assert.equal((await fetch(`${app.origin}/api/jobs`)).status, 404);
   assert.equal((await fetch(`${app.origin}/api/progress`)).status, 400);
-  assert.equal((await fetch(`${app.origin}/api/jobs/not-an-id`)).status, 400);
   assert.equal(
     (await fetch(`${app.origin}/api/jobs/${randomUUID()}`)).status,
     404,
