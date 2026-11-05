@@ -5,7 +5,7 @@ import {
   validateJobId,
 } from "./validation";
 
-export { BlogWorkflow } from "./blog-workflow";
+export { JobWorkflow } from "./job-workflow";
 export { ProgressRoom } from "./progress-room";
 
 export default {
@@ -33,7 +33,7 @@ export default {
           message: "Your job is starting.",
         };
         await room.update(initial);
-        await env.BLOG_WORKFLOW.create({ id: jobId, params });
+        await env.JOB_WORKFLOW.create({ id: jobId, params });
         return Response.json({ jobId }, { status: 202 });
       }
       if (url.pathname === "/api/progress") {
@@ -45,7 +45,7 @@ export default {
         const progress = await env.PROGRESS_ROOM.getByName(jobId).getLatest();
         if (!progress)
           return Response.json({ error: "Job not found." }, { status: 404 });
-        const instance = await env.BLOG_WORKFLOW.get(jobId);
+        const instance = await env.JOB_WORKFLOW.get(jobId);
         const status = await instance.status();
         return Response.json(
           { jobId, status: status.status, progress },

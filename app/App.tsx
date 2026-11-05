@@ -113,7 +113,7 @@ export function App() {
             <p className="eyebrow">01 / Start a job</p>
             <h2 id="job-heading">What are you working on?</h2>
             <form onSubmit={startJob}>
-              <label htmlFor="prompt">Blog post topic</label>
+              <label htmlFor="prompt">Job prompt</label>
               <textarea
                 id="prompt"
                 value={progress?.prompt ?? prompt}
@@ -124,7 +124,7 @@ export function App() {
                 required
               />
               <p className="hint">
-                The stages simulate blog generation. The Workflow, storage, and
+                The stages simulate background work. The Workflow, storage, and
                 WebSocket connection are real.
               </p>
               <label className="failure-option">
@@ -218,7 +218,7 @@ export function App() {
         </p>
       </main>
       <footer>
-        Simulated blog generation. Real background execution and progress
+        Simulated background work. Real background execution and progress
         delivery.
         <br />
         Demo job links are public to anyone who has the URL.

@@ -32,7 +32,7 @@ test("browser follows a real job across refresh and a second tab", {
       posts += 1;
   });
   await page.goto(app.origin);
-  await page.getByLabel("Blog post topic").fill("The browser smoke test");
+  await page.getByLabel("Job prompt").fill("The browser smoke test");
   await page.getByRole("button", { name: "Start workflow" }).click();
   await page.waitForURL(/\?jobId=/);
   await page.waitForFunction(
@@ -56,7 +56,7 @@ test("browser follows a real job across refresh and a second tab", {
     Array(4).fill("complete"),
   );
   assert.equal(
-    await page.getByLabel("Blog post topic").inputValue(),
+    await page.getByLabel("Job prompt").inputValue(),
     "The browser smoke test",
   );
   assert.equal(
@@ -103,7 +103,7 @@ test("browser displays terminal failures and fits a mobile viewport", {
   );
   await page.getByRole("button", { name: "Start a new job" }).click();
   assert.equal(new URL(page.url()).searchParams.has("jobId"), false);
-  await page.getByLabel("Blog post topic").fill("A fresh topic");
+  await page.getByLabel("Job prompt").fill("A fresh topic");
   assert.equal(
     await page.getByRole("button", { name: "Start workflow" }).isEnabled(),
     true,

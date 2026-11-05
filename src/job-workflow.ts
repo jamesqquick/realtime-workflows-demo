@@ -12,7 +12,7 @@ class DemoStageError extends NonRetryableError {
   }
 }
 
-export class BlogWorkflow extends WorkflowEntrypoint<Env, JobParams> {
+export class JobWorkflow extends WorkflowEntrypoint<Env, JobParams> {
   async run(event: WorkflowEvent<JobParams>, step: WorkflowStep) {
     const room = this.env.PROGRESS_ROOM.getByName(event.instanceId);
     const base = { jobId: event.instanceId, prompt: event.payload.prompt };
@@ -34,7 +34,7 @@ export class BlogWorkflow extends WorkflowEntrypoint<Env, JobParams> {
         await step.do(`run ${stage.id}`, async () => {
           if (stage.id === "draft" && event.payload.failAtDraft)
             throw new DemoStageError();
-          return { stage: stage.id, topic: event.payload.prompt };
+          return { stage: stage.id, prompt: event.payload.prompt };
         });
       }
       await step.do("publish completion", async () => {
