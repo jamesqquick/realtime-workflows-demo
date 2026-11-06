@@ -13,7 +13,7 @@ export class JobWorkflow extends WorkflowEntrypoint<Env, JobParams> {
     try {
       for (const [index, stage] of stages.entries()) {
         stageIndex = index;
-        await step.do(`publish ${stage.id}`, async () => {
+        await step.do(`Executing ${stage.name}`, async () => {
           await room.update({
             jobId: event.instanceId,
             stageIndex: index,
@@ -22,10 +22,8 @@ export class JobWorkflow extends WorkflowEntrypoint<Env, JobParams> {
             message: stage.message,
           });
         });
+
         await step.sleep(`simulate ${stage.id}`, "2 seconds");
-        await step.do(`run ${stage.id}`, async () => {
-          return { stage: stage.id, prompt: event.payload.prompt };
-        });
       }
       await step.do("publish completion", async () => {
         await room.update({
