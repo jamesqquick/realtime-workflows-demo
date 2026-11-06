@@ -7,7 +7,7 @@ export const stages = [
   {
     id: "outline",
     name: "Outline",
-    message: "Giving the post a clear structure",
+    message: "Organizing the work into a clear plan",
   },
   { id: "draft", name: "Draft", message: "Putting the first version together" },
   { id: "review", name: "Review", message: "Checking the result" },

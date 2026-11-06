@@ -39,7 +39,7 @@ export function App() {
                 );
               }}
             >
-              <label htmlFor="prompt">Blog post topic</label>
+              <label htmlFor="prompt">Job prompt</label>
               <textarea
                 id="prompt"
                 value={prompt}
