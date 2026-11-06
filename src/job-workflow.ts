@@ -8,7 +8,6 @@ import { type JobParams, stages } from "./progress";
 export class JobWorkflow extends WorkflowEntrypoint<Env, JobParams> {
   async run(event: WorkflowEvent<JobParams>, step: WorkflowStep) {
     const room = this.env.PROGRESS_ROOM.getByName(event.instanceId);
-    const base = { jobId: event.instanceId, prompt: event.payload.prompt };
     let stageIndex = 0;
 
     try {
@@ -16,7 +15,7 @@ export class JobWorkflow extends WorkflowEntrypoint<Env, JobParams> {
         stageIndex = index;
         await step.do(`publish ${stage.id}`, async () => {
           await room.update({
-            ...base,
+            jobId: event.instanceId,
             stageIndex: index,
             completedStages: index,
             status: "running",
@@ -30,7 +29,7 @@ export class JobWorkflow extends WorkflowEntrypoint<Env, JobParams> {
       }
       await step.do("publish completion", async () => {
         await room.update({
-          ...base,
+          jobId: event.instanceId,
           stageIndex: stages.length - 1,
           completedStages: stages.length,
           status: "complete",
@@ -41,7 +40,7 @@ export class JobWorkflow extends WorkflowEntrypoint<Env, JobParams> {
     } catch (error) {
       await step.do("publish failure", async () => {
         await room.update({
-          ...base,
+          jobId: event.instanceId,
           stageIndex,
           completedStages: stageIndex,
           status: "failed",

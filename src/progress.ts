@@ -17,7 +17,6 @@ export type JobParams = { prompt: string };
 
 export type ProgressUpdate = {
   jobId: string;
-  prompt: string;
   stageIndex: number;
   completedStages: number;
   status: "running" | "complete" | "failed";
