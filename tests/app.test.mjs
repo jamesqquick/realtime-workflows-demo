@@ -28,7 +28,7 @@ test("starter reports an unimplemented job instead of pretending to run it", asy
     body: JSON.stringify({ prompt: "A demo job" }),
   });
   assert.equal(response.status, 501);
-  assert.match((await response.json()).error, /No job has started/);
+  assert.match((await response.json()).error, /not implemented/);
   const missing = await fetch(`${app.origin}/api/missing`);
   assert.equal(missing.status, 404);
   assert.match(missing.headers.get("content-type"), /application\/json/);
