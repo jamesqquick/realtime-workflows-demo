@@ -11,7 +11,7 @@ export default {
       return Response.json({ ok: true });
     }
 
-    if (request.method === "POST" && url.pathname === "/api/jobs") {
+    if (url.pathname === "/api/jobs" && request.method === "POST") {
       const params = (await request.json()) as JobParams;
       const jobId = crypto.randomUUID();
       const room = env.PROGRESS_ROOM.getByName(jobId);
@@ -41,7 +41,8 @@ export default {
       return room.fetch(request);
     }
 
-    if (request.method === "GET" && url.pathname.startsWith("/api/jobs/")) {
+    const jobStatusPath = url.pathname.match(/^\/api\/jobs\/([^/]+)$/);
+    if (request.method === "GET" && jobStatusPath) {
       const jobId = url.pathname.slice("/api/jobs/".length);
       const room = env.PROGRESS_ROOM.getByName(jobId);
       const progress = await room.getLatest();
