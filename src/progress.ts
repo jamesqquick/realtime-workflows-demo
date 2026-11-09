@@ -13,11 +13,10 @@ export const stages = [
   { id: "review", name: "Review", message: "Checking the result" },
 ] as const;
 
-export type JobParams = { prompt: string; failAtDraft?: boolean };
+export type JobParams = { prompt: string };
 
 export type ProgressUpdate = {
   jobId: string;
-  prompt: string;
   stageIndex: number;
   completedStages: number;
   status: "running" | "complete" | "failed";
