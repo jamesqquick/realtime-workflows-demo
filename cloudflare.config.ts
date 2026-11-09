@@ -1,11 +1,17 @@
-import { defineConfig } from "cf/config";
+import { defineConfig, defineWorker } from "cf/config";
 import * as entrypoint from "./src/index.ts" with { type: "cf-worker" };
+
+const workerName = "workflow-lab-solution";
+
+const app = defineWorker({
+  name: workerName,
+  compatibilityDate: "2026-11-03",
+  entrypoint,
+});
 
 export default defineConfig({
   worker: {
-    name: "workflow-lab-starter",
-    compatibilityDate: "2026-11-03",
-    entrypoint,
+    ...app,
     assets: {
       notFoundHandling: "single-page-application",
       runWorkerFirst: ["/api/*"],
