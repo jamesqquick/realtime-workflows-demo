@@ -1,7 +1,7 @@
 import type { JobParams } from "./progress";
 
 export default {
-  async fetch(request, _env) {
+  async fetch(request, env) {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/health") {
