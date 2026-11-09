@@ -1,6 +1,6 @@
 import type { JobParams } from "./progress";
 
-export { JobWorkflow } from "./job-workflow";
+export { JobWorkflow } from "./workflow";
 export { ProgressRoom } from "./progress-room";
 
 export default {
