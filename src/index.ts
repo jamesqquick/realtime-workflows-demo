@@ -9,9 +9,6 @@ export default {
     }
     if (url.pathname === "/api/jobs" && request.method === "POST") {
       const params = (await request.json()) as JobParams;
-      const jobId = crypto.randomUUID();
-      void params;
-      void jobId;
 
       return Response.json(
         {
